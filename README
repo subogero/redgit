@@ -7,13 +7,13 @@ redupdate
 ---------
 Create or update Redmine issues via the command line.
 Runs on the Redmine server only, so use via ssh.
-It's a shell scripts, so there are no undocumented Ruby-dependencies!
+It's a shell script, so there are no undocumented Ruby-dependencies!
 
 redupload
 ---------
 Uploads a file into a Redmine project. Usage:
 $ redupload <server> <project> <file>
-Uses WWW::Mechanize.
+Uses Perl and WWW::Mechanize (libwww-mechanize-perl on Debian).
 
 miner
 -----
