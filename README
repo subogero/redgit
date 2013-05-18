@@ -13,14 +13,16 @@ redupload
 ---------
 Uploads a file into a Redmine project. Usage:
 $ redupload <server> <project> <file>
-Uses Perl and WWW::Mechanize (libwww-mechanize-perl on Debian).
+Uses Perl, Term::Readkey and WWW::Mechanize; on Debian install packages
+perl, libterm-readkey-perl, libwww-mechanize-perl, respectively.
 
 miner
 -----
 A daemon to query each branch of the Repository of a Redmine project
 periodically, one branch every 15s.
+Uses curl.
 Benefits:
-* your virtual machine alway gets some processor power assigned
+* Redmine keeps alive, no sluggish response times
 * the issue-commit links are kept up to date, whithout having to check the Repo
 
 Start from /etc/rc.local as a daemon:

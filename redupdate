@@ -7,7 +7,7 @@ redupdate -p <project> -s <subject> -e <email> [FILE]
 redupdate -i <issue> -e <email> [FILE]
 
 Creates or updates a Redmine issue, reading the text of the issue description
-or issue-update from FILE or stadard input if FILE not specified.
+or issue-update from FILE or stadard input if FILE is not specified.
 It runs only on the machine where Redmine is installed, use typically via ssh.
 
 -i <issue>    Issue number (without #) if you're updating an issue
