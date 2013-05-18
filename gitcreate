@@ -1,0 +1,33 @@
+#!/bin/sh
+if [ "$1" = -h -o -z "$1" ]; then
+  cat <<EOF
+Usage: gitcreate <repo> [<email>] | -h
+
+Create directory <repo>.git, create a bare git repo in it
+and set up its post-update hook to allow http sharing.
+
+If <email> address is specified, the post-receive hook is
+set up to send email notifications about pushes.
+EOF
+  if [ -z "$1" ]; then
+    exit 1
+  else
+    exit 0
+  fi
+fi
+
+mkdir ${1}.git;
+if [ $? != 0 ]; then
+  echo >&2 Abort: Repo ${1}.git already exists.
+  exit 1
+fi
+cd ${1}.git
+git init --bare
+cd hooks
+mv post-update.sample post-update
+
+if [ "$2" ]; then
+  echo $2 | grep '@.*knorr-bremse.com$' || exit 0
+  mv post-receive.sample post-receive
+  echo gitemail $1 $2 >>post-receive
+fi

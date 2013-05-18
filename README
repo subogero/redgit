@@ -1,0 +1,44 @@
+Scripts and tools related to Redmine and Git server administration
+==================================================================
+
+See <script> -h for invocation details.
+
+redupdate
+---------
+Create or update Redmine issues via the command line.
+Runs on the Redmine server only, so use via ssh.
+It's a shell scripts, so there are no undocumented Ruby-dependencies!
+
+redupload
+---------
+Uploads a file into a Redmine project. Usage:
+$ redupload <server> <project> <file>
+Uses WWW::Mechanize.
+
+miner
+-----
+A daemon to query each branch of the Repository of a Redmine project
+periodically, one branch every 15s.
+Benefits:
+* your virtual machine alway gets some processor power assigned
+* the issue-commit links are kept up to date, whithout having to check the Repo
+
+Start from /etc/rc.local as a daemon:
+miner <project> &
+
+gitemail
+--------
+Meant to be called from the post-receive hook of a git repo, to inform the
+maintainer about pushes. Needs mutt to send emails.
+
+gitcreate
+---------
+Creates a bare git repo, sets up its post-update hook for http access and,
+if an email address is specified, sets up a gitemail call into the
+post-receive hook.
+
+Typical usage:
+$ gitcreate foo bar@baz.com
+This will create the bare repo foo.git in the current dir, set up http access,
+and install gitemail into the post-receive hook to notify the maintainer
+about pushes.

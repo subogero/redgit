@@ -1,0 +1,62 @@
+#!/bin/sh
+usage ()
+{
+  cat <<EOF
+Usage:
+redupdate -p <project> -s <subject> -e <email> [FILE]
+redupdate -i <issue> -e <email> [FILE]
+
+Creates or updates a Redmine issue, reading the text of the issue description
+or issue-update from FILE or stadard input if FILE not specified.
+It runs only on the machine where Redmine is installed, use typically via ssh.
+
+-i <issue>    Issue number (without #) if you're updating an issue
+-p <project>  Project id if you're creating an issue
+-s <subject>  Issue title, use only together with -p
+-e <email>    Email address of Author or Updater
+
+When creating an issue, you can use some keywords for certain issue fields:
+Tracker: <name>
+Category: <name>
+Priority: <name>
+Status: <name>
+Assigned to: <name> | <login>
+Custom Filed: <name>
+
+In Redmine Administration / Settings / Incoming Emails you need to
+Enable WS for incoming emails and save the API key into the /etc/redmine-key
+or your ~/.redmine-key file.
+EOF
+  exit $1
+}
+
+# Input handling
+[ "$1" = '-h' ] && usage 0
+while [ "$1" ]; do
+  if   [ "$1" = '-i' ]; then shift; subject="Subject: Re: [#$1]"; shift
+  elif [ "$1" = '-p' ]; then shift; project="-p $1"; shift
+  elif [ "$1" = '-s' ]; then shift; subject="Subject: $1"; shift
+  elif [ "$1" = '-e' ]; then shift; from="From: $1"; shift
+  else file=$1; shift
+  fi
+done
+
+# Error checking
+[ -z "$subject" -o -z "$from" ] && usage 1
+
+# Find secret API key
+if [ -f /etc/redmine-key ]; then key=`cat /etc/redmine-key`
+elif [ -f ~/.redmine-key ]; then key=`cat ~/.redmine-key`
+else echo API key in /etc/redmine-key or ~/.redmine-key not found; exit 2
+fi
+
+# The real thing
+{
+cat <<EOF
+$from
+To: redmine@localhost
+$subject
+
+`cat $file`
+EOF
+} | /usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb --url=http://localhost/redmine --key=$key $project

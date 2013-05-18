@@ -1,0 +1,31 @@
+#!/bin/sh
+project=$1
+email=$2
+
+while read from to ref; do
+
+tag=$(echo $ref | sed -n 's:refs/tags/::p')
+branch=$(echo $ref | sed -n 's:refs/heads/::p')
+[ $branch ] && author=$(git cat-file -p $branch | sed -rn 's/^author (.+) <.+/\1/p')
+
+if [ $tag ]; then
+  echo Please fetch. | mutt -s "$project - New tag $tag" $email
+  continue
+fi
+
+if [ $from = 0000000000000000000000000000000000000000 ]; then
+  echo Please fetch. | mutt -s "$project - New branch $branch by $author" $email
+  continue
+fi
+
+cat <<EOF | mutt -s "$project - $author updated branch $branch" $email
+Log
+---
+$(git log --oneline --decorate --graph $from..$to)
+
+Diffstat
+--------
+$(git --no-pager diff --stat $from $to)
+EOF
+
+done

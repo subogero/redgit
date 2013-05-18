@@ -1,0 +1,12 @@
+#!/bin/sh
+remote=$1
+if [ -z "$remote" ]; then
+  echo Please specify remote
+  exit 1
+fi
+branch=$2
+[ -z "$branch" ] && branch=master
+echo Remote: $remote
+echo Branch: $branch
+
+git pull -s subtree $remote $branch

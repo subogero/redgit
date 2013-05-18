@@ -1,0 +1,29 @@
+#!/bin/sh
+url=$1
+if [ -z "$url" ]; then
+	echo Please specify subtree URL
+	exit 1
+fi
+remote=$(echo $url | sed -r -e 's|^.+[:/]([^:/]+)$|\1|' -e 's/\.git$//')
+echo Remote: $remote
+branch=$2
+[ -z "$branch" ] && branch=master
+echo Branch: $branch
+root=$(git rev-parse --show-toplevel)
+prefix=$(pwd | sed -r -e "s:$root::" -e 's:^/(.+)$:\1/:')
+subtree=${prefix}${remote}
+echo Subtree: $subtree
+
+#exit 0
+
+git remote add -f $remote $url
+[ $? = 0 ] || exit 0
+
+git merge -s ours --no-commit $remote/$branch
+if [ $? != 0 ]; then
+	git remote rm $remote
+	exit 2
+fi
+
+git read-tree --prefix=$subtree/ -u $remote/$branch
+git commit -m "Add subtree $subtree from $url"

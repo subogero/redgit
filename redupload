@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+use strict;
+use WWW::Mechanize;
+use Term::ReadKey;
+
+my $help = "Usage: redupload <server> <project> <file> [<description>]\n";
+my ($server, $pj, $file, $descr) = @ARGV;
+die "${help}No server specified" unless ($server);
+die "${help}No project specified" unless ($pj);
+die "${help}No file specified" unless ($file);
+$descr = '' unless ($descr);
+
+print "$server/redmine username: $ENV{USER}\n";
+ReadMode 'noecho';
+print "$server/redmine password: "; (my $password = <STDIN>) =~ s/[\r\n]//g;
+ReadMode 0;
+
+my $mech = WWW::Mechanize->new();
+
+$mech->get("http://$server/redmine/login");
+$mech->submit_form(
+    with_fields => {
+        username => $ENV{USER},
+        password => $password
+    }
+);
+
+$mech->get("http://$server/redmine/projects/$pj/files/new");
+$mech->submit_form(
+    with_fields => {
+        "attachments[1][file]"        => $file,
+        "attachments[1][description]" => $descr
+    }
+);
