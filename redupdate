@@ -52,4 +52,10 @@ $subject
 
 `cat $file`
 EOF
-} | /usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb --url=http://localhost/redmine --key=`cat /etc/redmine-key` $project
+} \
+| \
+/usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb \
+--url=http://localhost/redmine \
+--key=`cat /etc/redmine-key` \
+-o project,tracker,category,priority,status,assigned_to,fixed_version \
+$project
