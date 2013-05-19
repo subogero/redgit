@@ -3,17 +3,23 @@ usage ()
 {
   cat <<EOF
 Usage:
-redupdate -p <project> -s <subject> -e <email> [FILE]
-redupdate -i <issue> -e <email> [FILE]
+redupdate -p <project> -s <subject> -u <url> | -e <email> [FILE]
+redupdate -i <issue> -u <url> | -e <email> [FILE]
 
 Creates or updates a Redmine issue, reading the text of the issue description
 or issue-update from FILE or stadard input if FILE is not specified.
-It runs only on the machine where Redmine is installed, use typically via ssh.
 
 -i <issue>    Issue number (without #) if you're updating an issue
 -p <project>  Project id if you're creating an issue
 -s <subject>  Issue title, use only together with -p
--e <email>    Email address of Author or Updater
+-u <url>      URL to access the Redmine server via SSH in format user@server
+-e <email>    Email address of Author or Updater, when on the Redmine server
+
+When working directly on the Redmine server, specify your email with -e.
+When accessing a remote Redmine server, specify its URL with -u.
+In the latter case, redupdate tries to extract your email address from
+git config if you don't specify it.
+SSH access with public-key authentication only, passwords do not work.
 
 When creating an issue, you can use some keywords for certain issue fields:
 Tracker: <name>
@@ -36,26 +42,35 @@ while [ "$1" ]; do
   elif [ "$1" = '-p' ]; then shift; project="-p $1"; shift
   elif [ "$1" = '-s' ]; then shift; subject="Subject: $1"; shift
   elif [ "$1" = '-e' ]; then shift; from="From: $1"; shift
+  elif [ "$1" = '-u' ]; then shift; url=$1; shift
   else file=$1; shift
   fi
 done
 
+# Email address from git config if necessary
+[ "$url" -a -z "$from" ] && from="From: `git config --get user.email`"
+
 # Error checking
 [ -z "$subject" -o -z "$from" ] && usage 1
 
-# The real thing
-{
-cat <<EOF
-$from
+# The issue update/description message
+[ -z "$file" ] && echo Enter you message and terminate it with Ctrl-D
+message="$from
 To: redmine@localhost
 $subject
 
-`cat $file`
-EOF
-} \
-| \
-/usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb \
+`cat $file`"
+
+# The command to execute
+command="/usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb \
 --url=http://localhost/redmine \
---key=`cat /etc/redmine-key` \
+--key-file=/etc/redmine-key \
 -o project,tracker,category,priority,status,assigned_to,fixed_version \
-$project
+$project"
+
+# The real thing
+if [ "$url" ]; then
+  echo "$message" | ssh -o PasswordAuthentication=no $url "$command"
+else
+  echo "$message" | $command
+fi
