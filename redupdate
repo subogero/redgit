@@ -24,8 +24,7 @@ Assigned to: <name> | <login>
 Custom Filed: <name>
 
 In Redmine Administration / Settings / Incoming Emails you need to
-Enable WS for incoming emails and save the API key into the /etc/redmine-key
-or your ~/.redmine-key file.
+Enable WS for incoming emails and save the API key into the /etc/redmine-key.
 EOF
   exit $1
 }
@@ -44,12 +43,6 @@ done
 # Error checking
 [ -z "$subject" -o -z "$from" ] && usage 1
 
-# Find secret API key
-if [ -f /etc/redmine-key ]; then key=`cat /etc/redmine-key`
-elif [ -f ~/.redmine-key ]; then key=`cat ~/.redmine-key`
-else echo API key in /etc/redmine-key or ~/.redmine-key not found; exit 2
-fi
-
 # The real thing
 {
 cat <<EOF
@@ -59,4 +52,4 @@ $subject
 
 `cat $file`
 EOF
-} | /usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb --url=http://localhost/redmine --key=$key $project
+} | /usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb --url=http://localhost/redmine --key=`cat /etc/redmine-key` $project
