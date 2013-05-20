@@ -29,7 +29,7 @@ Category: <name>
 Priority: <name>
 Status: <name>
 Assigned to: <name> | <login>
-Custom Filed: <name>
+<Custom Field>: <name>
 
 In Redmine Administration / Settings / Incoming Emails you need to
 Enable WS for incoming emails and save the API key into the /etc/redmine-key.
