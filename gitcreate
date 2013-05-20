@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright: SZABO Gergely <szg@subogero.com>
+# License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 if [ "$1" = -h -o -z "$1" ]; then
   cat <<EOF
 Usage: gitcreate <repo> [<email>] | -h

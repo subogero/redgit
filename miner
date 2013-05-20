@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright: SZABO Gergely <szg@subogero.com>
+# License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 pj=$1
 while true; do
   curl localhost/redmine/projects/${pj}/repository 2>/dev/null \

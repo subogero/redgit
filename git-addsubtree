@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright: SZABO Gergely <szg@subogero.com>
+# License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 url=$1
 if [ -z "$url" ]; then
 	echo Please specify subtree URL

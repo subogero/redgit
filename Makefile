@@ -1,3 +1,5 @@
+# Copyright: SZABO Gergely <szg@subogero.com>
+# License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 install:
 	cp git-addsubtree git-pullsubtree /usr/lib/git-core/
 	cp gitcreate gitemail miner redupdate redupload /usr/local/bin/
