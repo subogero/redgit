@@ -66,7 +66,7 @@ $subject
 # The command to execute
 command="/usr/share/redmine/extra/mail_handler/rdm-mailhandler.rb \
 --url=http://localhost/redmine \
---key-file=/etc/redmine-key \
+"'--key=`cat /etc/redmine-key`'" \
 -o project,tracker,category,priority,status,assigned_to,fixed_version \
 $project"
 
