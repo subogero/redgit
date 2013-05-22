@@ -4,5 +4,11 @@ install:
 	cp git-addsubtree git-pullsubtree /usr/lib/git-core/
 	cp gitcreate gitemail miner redupdate redupload redshow /usr/local/bin/
 uninstall:
-	rm /usr/lib/git-core/{git-addsubtree,git-pullsubtree}
-	rm /usr/local/bin/{gitcreate,gitemail,miner,redupdate,redupload,redshow}
+	rm /usr/lib/git-core/git-addsubtree
+	rm /usr/lib/git-core/git-pullsubtree
+	rm /usr/local/bin/gitcreate
+	rm /usr/local/bin/gitemail
+	rm /usr/local/bin/miner
+	rm /usr/local/bin/redupdate
+	rm /usr/local/bin/redupload
+	rm /usr/local/bin/redshow
