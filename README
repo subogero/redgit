@@ -20,7 +20,8 @@ perl, libterm-readkey-perl, libwww-mechanize-perl, respectively.
 redshow
 -------
 Pretty print a Redmine issue in plain text format.
-Uses Perl and LWP::Simple.
+Uses Perl and LWP::Simple; on Debian install packages
+perl and libweb-simple-perl, respectively.
 
 miner
 -----
