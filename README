@@ -17,6 +17,11 @@ Uploads a file into a Redmine project.
 Uses Perl, Term::Readkey and WWW::Mechanize; on Debian install packages
 perl, libterm-readkey-perl, libwww-mechanize-perl, respectively.
 
+redshow
+-------
+Pretty print a Redmine issue in plain text format.
+Uses Perl and LWP::Simple.
+
 miner
 -----
 A daemon to query each branch of the Repository of a Redmine project

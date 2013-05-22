@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+use LWP::Simple;
+sub help {
+    print <<EOF;
+Usage: redshow <url>
+Pretty print an issue in plain text format.
+If you omit the protocol-prefix from the URL, redshow will use http://
+EOF
+    exit shift;
+}
+
+help 0 if $ARGV[0] eq '-h';
+our $url = shift or help 1;
+$url =~ m:issues/(\d+)$:;
+our $issue = $1;
+$url =~ s|^|http://| unless $url =~ m|^http://|;
+our @lines = split /\n/, get $url;
+
+foreach (@lines) {
+    # title
+    if (m|^<h2>(.+#$issue)</h2>|) {
+        print "$1 - ";
+    }
+    if (m|<div><h3>(.+)</h3></div>|) {
+        print "$1\n\n";
+    }
+    # Attributes
+    if (m|<th class=.+>(.+)</th><td class=.+>(.+?)(</.>)?</td>|) {
+        printf "%-16s %s\n", $1, $2;
+    }
+    # Description
+    our $desc;
+    unless ($desc) {
+        if (m|<p><strong>Description</strong></p>|) {
+            $desc = "\nDescription\n";
+        }
+    } elsif (m|^</div>|) {
+        print "$desc\n";
+        $desc = '';
+    } else {
+        s|^\s*||;
+        s|<br.*?>|\n|g;
+        s|<.+?>||g;
+        next if /^\s*$/;
+        $desc .= "$_\n";
+    }
+    # Commits
+    if (m|<h3>(Associated revisions)</h3>|) {
+        print "$1\n\n";
+    }
+    our $commit;
+    unless ($commit) {
+        if (m|<p><a href=.+>Revision (.+)</a>|) {
+            $commit = "$1 ";
+        }
+    } elsif (m|<a href="/redmine/users/\d+">(.+)</a>.+title="(.+)">|) {
+        $commit .= "by $1 on $2\n";
+    } elsif (m|<p>(.+?)(<.+)?</p>|) {
+        $commit .= "$1\n";
+        print "$commit\n";
+        $commit = '';
+    }
+    # Updates
+    if (m|<h3>(History)</h3>|) {
+        print "$1\n\n";
+    }
+    our $hist;
+    unless ($hist) {
+        if (m|Updated by <a.+?>(.+?)</a>.+title="(.+)">|) {
+            $hist = "Updated by $1 on $2\n";
+        }
+    } elsif (m|^\s*</div>$|) {
+        print "$hist\n";
+        $hist = '';
+    } else {
+        s|^\s*||;
+        s|<br.*?>|\n|g;
+        s|<.+?>||g;
+        next if /^\s*$/;
+        $hist .= "$_\n";
+    }
+}
