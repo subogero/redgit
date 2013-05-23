@@ -18,6 +18,7 @@ $url =~ s|^|http://| unless $url =~ m|^http://|;
 
 open CURL, "curl $url 2>/dev/null |" or die $!;
 while (<CURL>) {
+    s/\r|\n//g;
     # title
     if (m|^<h2>(.+#$issue)</h2>|) {
         print "$1 - ";
