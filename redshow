@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 # Copyright: SZABO Gergely <szg@subogero.com>
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
-use LWP::Simple;
 sub help {
     print <<EOF;
 Usage: redshow <url>
@@ -16,9 +15,9 @@ our $url = shift or help 1;
 $url =~ m:issues/(\d+)$:;
 our $issue = $1;
 $url =~ s|^|http://| unless $url =~ m|^http://|;
-our @lines = split /\n/, get $url;
 
-foreach (@lines) {
+open CURL, "curl $url 2>/dev/null |" or die $!;
+while (<CURL>) {
     # title
     if (m|^<h2>(.+#$issue)</h2>|) {
         print "$1 - ";
