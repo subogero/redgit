@@ -56,7 +56,6 @@ done
 [ -z "$subject" -o -z "$from" ] && usage 1
 
 # The issue update/description message
-[ -z "$file" ] && echo Enter you message and terminate it with Ctrl-D
 message="$from
 To: redmine@localhost
 $subject
