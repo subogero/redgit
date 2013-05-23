@@ -6,7 +6,7 @@ See <script> -h for invocation details.
 redupdate
 ---------
 Create or update Redmine issues via the command line.
-Works with a remote Redmine server if you have SSH public-key access,
+Works with a remote Redmine server if you have SSH access,
 or locally on the Redmine server itself.
 Assumes a standard Debian installation in /usr/share/redmine.
 It's a shell script, so there are no undocumented Ruby-dependencies!

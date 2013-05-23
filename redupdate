@@ -21,9 +21,8 @@ When working directly on the Redmine server, specify your email with -e.
 When accessing a remote Redmine server, specify its URL with -u.
 In the latter case, redupdate tries to extract your email address from
 git config if you don't specify it.
-SSH access with public-key authentication only, passwords do not work.
 
-When creating an issue, you can use some keywords for certain issue fields:
+When creating or updating an issue, you can use keywords for issue fields:
 Tracker: <name>
 Category: <name>
 Priority: <name>
@@ -71,7 +70,7 @@ $project"
 
 # The real thing
 if [ "$url" ]; then
-  echo "$message" | ssh -o PasswordAuthentication=no $url "$command"
+  echo "$message" | ssh $url "$command"
 else
   echo "$message" | $command
 fi
