@@ -3,18 +3,30 @@
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 sub help {
     print <<EOF;
-Usage: redshow <url>
+Usage: redshow [-i <issue>] <url> | -h
 Pretty print an issue in plain text format.
-If you omit the protocol-prefix from the URL, redshow will use http://
+-i <issue>  Issue number when using the URL of Redmine root
+<url>       URL of issue, or Redmine root when used along with -i
+-h          Show this help text
 EOF
     exit shift;
 }
 
 help 0 if $ARGV[0] eq '-h';
+our $issue;
+if ($ARGV[0] eq '-i') {
+    shift;
+    $issue = shift;
+    $issue = '' unless $issue =~ /\d+/;
+}
 our $url = shift or help 1;
-$url =~ m:issues/(\d+)$:;
-our $issue = $1;
-$url =~ s|^|http://| unless $url =~ m|^http://|;
+if ($url =~ m|issues/(\d+)$|) {
+    $issue = $1;
+} elsif ($issue) {
+    $url =~ s|/$||;
+    $url .= "/issues/$issue";
+}
+$url =~ s|^|http://| unless $url =~ m|^\w+://|;
 
 open CURL, "curl $url 2>/dev/null |" or die $!;
 while (<CURL>) {
