@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+# Copyright: SZABO Gergely <szg@subogero.com>
+# License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
+sub help {
+    print <<EOF;
+UsageL redlist [ -p <project> ] <url> | -h
+List issues from a Redmine server in plain text format.
+-p <project>  Filter for project id
+<url>         URL of Redmine root
+-h            Show this help text
+EOF
+    exit shift;
+}
+
+help 0 if $ARGV[0] eq '-h';
+our $project = '';
+if ($ARGV[0] eq '-p') {
+    shift;
+    $project = shift;
+    $project = $project =~ /[-\w]{1,100}/
+             ? "/projects/$project"
+             : '';
+}
+
+our $url = shift or die $!;
+$url =~ s|/$||;
+$url .= "$project/issues.csv";
+$url =~ s|^|http://| unless $url =~ m|^\w+://|;
+
+our @issues;
+our $n_iss = 0;
+open CURL, "curl $url 2>/dev/null |" or die $!;
+our @heading = split /,|\n/, <CURL>;
+our %width;
+foreach (@heading) {
+    $issues[$n_iss]->{$_} = $_;
+    $width{$_} = length;
+}
+$n_iss++;
+our $n_fld = 0;
+while (<CURL>) {
+    while (1) {
+        my $heading = $heading[$n_fld];
+        if (s/^"(.*?)"[,\n]// || s/^([^"]?.*?)[,\n]//) {
+            $issues[$n_iss]->{$heading} = $1;
+            my $l = length $1;
+            $width{$heading} = $l if $l > $width{$heading};
+            $n_fld++;
+        } elsif (/^$/) {
+            $n_fld = 0;
+            $n_iss++;
+            last;
+        }
+    }
+}
+
+foreach my $issue (@issues) {
+    foreach my $fld (@heading) {
+        printf "%-$width{$fld}s ", $issue->{$fld};
+    }
+    print "\n";
+}
