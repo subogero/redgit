@@ -20,6 +20,7 @@ perl, libterm-readkey-perl, libwww-mechanize-perl, respectively.
 redlist
 -------
 List Redmine issues in plain text format, optionally filtered for a project.
+In ~/.redgit add filtered out fields under section [redlist], one line each.
 Uses Perl and curl; on Debian install packages perl and curl, respectively.
 
 redshow

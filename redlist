@@ -75,8 +75,20 @@ while (<CURL>) {
     }
 }
 
+our %filters;
+if (open CFG, "$ENV{HOME}/.redgit") {
+    my $section = '';
+    while (<CFG>) {
+        $section = $1 if /^\[(.+)\]/;
+        next unless $section eq 'redlist';
+        s/\r|\n//g;
+        $filters{$_} = 1;
+    }
+}
+close CFG;
 foreach my $issue (@issues) {
     foreach my $fld (@heading) {
+        next if $filters{$fld};
         uprintf "%-$width{$fld}s ", $issue->{$fld};
     }
     print "\n";
