@@ -89,7 +89,9 @@ close CFG;
 foreach my $issue (@issues) {
     foreach my $fld (@heading) {
         next if $filters{$fld};
-        uprintf "%-$width{$fld}s ", $issue->{$fld};
+        my $format = "%-$width{$fld}s ";
+        $format =~ s/-// if $issue->{$fld} =~ /^\d+$/;
+        uprintf $format, $issue->{$fld};
     }
     print "\n";
 }
