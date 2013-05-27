@@ -11,6 +11,7 @@ List issues from a Redmine server in plain text format.
 EOF
     exit shift;
 }
+sub uprintf; sub ulength;
 
 help 0 if $ARGV[0] eq '-h';
 our $project = '';
@@ -43,7 +44,7 @@ while (<CURL>) {
         my $heading = $heading[$n_fld];
         if (s/^"(.*?)"[,\n]// || s/^([^"]?.*?)[,\n]//) {
             $issues[$n_iss]->{$heading} = $1;
-            my $l = length $1;
+            my $l = ulength $1;
             $width{$heading} = $l if $l > $width{$heading};
             $n_fld++;
         } elsif (/^$/) {
@@ -56,7 +57,52 @@ while (<CURL>) {
 
 foreach my $issue (@issues) {
     foreach my $fld (@heading) {
-        printf "%-$width{$fld}s ", $issue->{$fld};
+        uprintf "%-$width{$fld}s ", $issue->{$fld};
     }
     print "\n";
+}
+
+sub uprintf {
+    my $format = shift;
+    my @format;
+    while ($format) {
+        if ($format =~ s/^([^%]+)//) {
+            push @format, $1;
+        }
+        elsif ($format =~ s/^(%.*?[%csduoxefgXEGbBpniDUOF])//) {
+            push @format, $1;
+        }
+    }
+    my $i = 0;
+    foreach (@_) {
+        my $incr = length($_) - ulength($_);
+        if ($incr) {
+            $i++ while $format[$i] !~ /^%[^%]/ && $i < $#format;
+            die "Wrong number of uprintf params\n" unless $format[$i];
+            $format[$i] =~ /^(\D+)(\d*)(\D+)$/;
+            my ($pre, $num, $post) = ($1, $2, $3);
+            $num += $incr if $num;
+            $format[$i] = "$pre$num$post";
+        }
+    }
+    $format .= $_ foreach (@format);
+    printf $format, @_;
+}
+
+sub ulength {
+    my $string = shift;
+    my @codes = unpack "U*", $string;
+    my $exotic = 0;
+    my $length = 0;
+    foreach (@codes) {
+        if (!$exotic && $_ > 127) {
+            $exotic = 1;
+            $length++;
+        }
+        if ($_ <= 127) {
+            $exotic = 0;
+            $length++;
+        }
+    }
+    $length;
 }
