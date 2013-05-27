@@ -39,18 +39,38 @@ foreach (@heading) {
 }
 $n_iss++;
 our $n_fld = 0;
+our $multiline;
 while (<CURL>) {
     while (1) {
         my $heading = $heading[$n_fld];
-        if (s/^"(.*?)"[,\n]// || s/^([^"]?.*?)[,\n]//) {
+        s/""/''/g if $multiline;
+        if (!$multiline && s/^"([^"]*\n)//) {
+            $multiline = $1;
+        } elsif ($multiline && s/^([^"]*\n)//) {
+            $multiline .= $1;
+        } elsif ($multiline && s/^(.*)"[,\n]//) {
+            $multiline .= $1;
+            $issues[$n_iss]->{$heading} = $multiline;
+            my $l = ulength $multiline;
+            $width{$heading} = $l if $l > $width{$heading};
+            $n_fld++;
+            $multiline = '';
+        } elsif (s/^"(.*?)"[,\n]// || s/^([^"]*?)[,\n]//) {
             $issues[$n_iss]->{$heading} = $1;
             my $l = ulength $1;
             $width{$heading} = $l if $l > $width{$heading};
             $n_fld++;
         } elsif (/^$/) {
-            $n_fld = 0;
-            $n_iss++;
+            unless ($multiline) {
+                $n_fld = 0;
+                $n_iss++
+            }
             last;
+        } else {
+            warn "Error! Fields:\n$issues[$n_iss]->{$_} " foreach (@heading);
+            warn "Partial multiline:\n$multiline\n";
+            warn "Remainder of line:\n$_";
+            die;
         }
     }
 }
