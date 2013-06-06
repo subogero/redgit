@@ -3,7 +3,7 @@
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 sub help {
     print <<EOF;
-UsageL redlist [ -p <project> ] <url> | -h
+Usage: redlist [ -p <project> ] <url> | -h
 List issues from a Redmine server in plain text format.
 -p <project>  Filter for project id
 <url>         URL of Redmine root
