@@ -3,10 +3,11 @@
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 sub help {
     print <<EOF;
-Usage: redshow [-i <issue>] <url> | -h
+Usage: redshow [-i <issue>] [<url>] | -h
 Pretty print an issue in plain text format.
 -i <issue>  Issue number when using the URL of Redmine root
 <url>       URL of issue, or Redmine root when used along with -i
+            taken from ~/.redgit if omitted
 -h          Show this help text
 EOF
     exit shift;
@@ -19,7 +20,20 @@ if ($ARGV[0] eq '-i') {
     $issue = shift;
     $issue = '' unless $issue =~ /\d+/;
 }
-our $url = shift or help 1;
+unless (our $url = shift) {
+    open CFG, "$ENV{HOME}/.redgit" or die $!;
+    my $section = '';
+    while (<CFG>) {
+        $section = $1 if /^\[(.+)\]/;
+        next unless $section eq 'redgit';
+        s/\r|\n//g;
+        if (/^http=(.+)/) {
+            $url = $1;
+            last;
+        }
+    }
+    close CFG;
+}
 if ($url =~ m|issues/(\d+)$|) {
     $issue = $1;
 } elsif ($issue) {

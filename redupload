@@ -5,13 +5,13 @@ sub help {
     print <<EOF;
 Usage:
 redupload <server> <project> <file> [<description>]
-redupload -p <project> <url> <file>
+redupload -p <project> [<url>] <file>
 Upload a file to Redmine.
 In the first form just specify a server name, '/redmine' will be appended.
 In the second form specify the entire url of the Redmine installation.
 <server>      URL of the server, assumes Redmine installed in /redmine
 -p <project>  Short project id
-<url>         URL of Redmine root
+<url>         URL of Redmine root, taken from ~/.redgit if omitted
 <file>        Local path of the file to upload
 -h            Show this help text
 EOF
@@ -31,7 +31,19 @@ if ($ARGV[0] eq '-p') {
     if (@ARGV >= 2) {
         $url = shift;
     } else {
-        help 1;
+        open CFG, "$ENV{HOME}/.redgit" or die $!;
+        my $section = '';
+        while (<CFG>) {
+            $section = $1 if /^\[(.+)\]/;
+            next unless $section eq 'redgit';
+            s/\r|\n//g;
+            if (/^http=(.+)/) {
+                $url = $1;
+                last;
+            }
+        }
+        close CFG;
+        help 1 unless $url;
     }
     $file = shift or help 1;
 }

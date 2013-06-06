@@ -3,10 +3,10 @@
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 sub help {
     print <<EOF;
-Usage: redlist [ -p <project> ] <url> | -h
+Usage: redlist [ -p <project> ] [<url>] | -h
 List issues from a Redmine server in plain text format.
 -p <project>  Filter for project id
-<url>         URL of Redmine root
+<url>         URL of Redmine root, taken from ~/.redgit if omitted
 -h            Show this help text
 EOF
     exit shift;
@@ -23,7 +23,20 @@ if ($ARGV[0] eq '-p') {
              : '';
 }
 
-our $url = shift or die $!;
+unless (our $url = shift) {
+    open CFG, "$ENV{HOME}/.redgit" or die $!;
+    my $section = '';
+    while (<CFG>) {
+        $section = $1 if /^\[(.+)\]/;
+        next unless $section eq 'redgit';
+        s/\r|\n//g;
+        if (/^http=(.+)/) {
+            $url = $1;
+            last;
+        }
+    }
+    close CFG;
+}
 $url =~ s|/$||;
 $url .= "$project/issues.csv";
 $url =~ s|^|http://| unless $url =~ m|^\w+://|;

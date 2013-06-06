@@ -5,7 +5,7 @@ usage ()
 {
   cat <<EOF
 Usage:
-redupdate -p <project> -s <subject> -u <url> | -e <email> [FILE]
+redupdate -p <project> -s <subject> [-u <url>] | -e <email> [FILE]
 redupdate -i <issue> -u <url> | -e <email> [FILE]
 
 Creates or updates a Redmine issue, reading the text of the issue description
@@ -15,6 +15,7 @@ or issue-update from FILE or stadard input if FILE is not specified.
 -p <project>  Project id if you're creating an issue
 -s <subject>  Issue title, use only together with -p
 -u <url>      URL to access the Redmine server via SSH in format user@server
+              taken from ~/.redgit if omitted
 -e <email>    Email address of Author or Updater, when on the Redmine server
 
 When working directly on the Redmine server, specify your email with -e.
@@ -47,6 +48,11 @@ while [ "$1" ]; do
   else file=$1; shift
   fi
 done
+
+# SSH URL from config file if omitted
+if [ -z "$url" -a -f ~/.redgit ]; then
+  url=`sed -rn '/^\[redgit\]/,/^\[/p' ~/.redgit | sed -rn 's/ssh=(.+)/\1/p'`
+fi
 
 # Email address from git config if necessary
 [ "$url" -a -z "$from" ] && from="From: `git config --get user.email`"
