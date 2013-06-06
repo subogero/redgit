@@ -1,33 +1,67 @@
 #!/usr/bin/perl
 # Copyright: SZABO Gergely <szg@subogero.com>
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
-use strict;
+sub help {
+    print <<EOF;
+Usage:
+redupload <server> <project> <file> [<description>]
+redupload -p <project> <url> <file>
+Upload a file to Redmine.
+In the first form just specify a server name, '/redmine' will be appended.
+In the second form specify the entire url of the Redmine installation.
+<server>      URL of the server, assumes Redmine installed in /redmine
+-p <project>  Short project id
+<url>         URL of Redmine root
+<file>        Local path of the file to upload
+-h            Show this help text
+EOF
+    exit shift;
+}
 use WWW::Mechanize;
 use Term::ReadKey;
 
-my $help = "Usage: redupload <server> <project> <file> [<description>]\n";
-my ($server, $pj, $file, $descr) = @ARGV;
-die "${help}No server specified" unless ($server);
-die "${help}No project specified" unless ($pj);
-die "${help}No file specified" unless ($file);
-$descr = '' unless ($descr);
+# Arguments
+help 0 if $ARGV[0] eq '-h';
+our $url;
+# Second form of args
+if ($ARGV[0] eq '-p') {
+    shift;
+    $pj = shift;
+    help 1 unless $pj =~ /[-\w]{1,100}/;
+    if (@ARGV >= 2) {
+        $url = shift;
+    } else {
+        help 1;
+    }
+    $file = shift or help 1;
+}
+# First form of args
+else {
+    our ($server, $pj, $file, $descr) = @ARGV;
+    help 1 unless $server && $pj && $file;
+    $descr = '' unless ($descr);
+    $url = "$server/redmine";
+}
+our $project = "projects/$pj";
+$url =~ s|^|http://| unless $url =~ m|^\w+://|;
 
-print "$server/redmine username: $ENV{USER}\n";
+# Authentication
+print "$url username: "; (my $user = <STDIN>) =~ s/[\r\n]//g;
 ReadMode 'noecho';
-print "$server/redmine password: "; (my $password = <STDIN>) =~ s/[\r\n]//g;
+print "$url password: "; (my $password = <STDIN>) =~ s/[\r\n]//g;
 ReadMode 0;
 
 my $mech = WWW::Mechanize->new();
 
-$mech->get("http://$server/redmine/login");
+$mech->get("$url/login");
 $mech->submit_form(
     with_fields => {
-        username => $ENV{USER},
+        username => $user,
         password => $password
     }
 );
 
-$mech->get("http://$server/redmine/projects/$pj/files/new");
+$mech->get("$url/$project/files/new");
 $mech->submit_form(
     with_fields => {
         "attachments[1][file]"        => $file,
