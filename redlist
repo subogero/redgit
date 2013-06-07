@@ -89,19 +89,23 @@ while (<CURL>) {
 }
 
 our %filters;
+our %only;
 if (open CFG, "$ENV{HOME}/.redgit") {
     my $section = '';
     while (<CFG>) {
         $section = $1 if /^\[(.+)\]/;
         next unless $section eq 'redlist';
-        s/\r|\n//g;
-        $filters{$_} = 1;
+        /^(.+)=(.+)[\r\n]+/;
+        my ($key, $val) = ($1, $2);
+        $filters{$val} = 1 if $key eq 'filter';
+        $only{$val}    = 1 if $key eq 'only';
     }
 }
 close CFG;
 foreach my $issue (@issues) {
     foreach my $fld (@heading) {
         next if $filters{$fld};
+        next if keys %only && !$only{$fld};
         my $format = "%-$width{$fld}s ";
         $format =~ s/-// if $issue->{$fld} =~ /^\d+$/;
         uprintf $format, $issue->{$fld};
