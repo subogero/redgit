@@ -20,7 +20,7 @@ perl, libterm-readkey-perl, libwww-mechanize-perl, respectively.
 redlist
 -------
 List Redmine issues in plain text format, optionally filtered for a project.
-In ~/.redgit add filtered out fields under section [redlist], one line each.
+See FILES for column-filtering via the ~/.redgit file.
 Uses Perl and curl; on Debian install packages perl and curl, respectively.
 
 redshow
@@ -55,3 +55,21 @@ $ gitcreate foo bar@baz.com
 This will create the bare repo foo.git in the current dir, set up http access,
 and install gitemail into the post-receive hook to notify the maintainer
 about pushes.
+
+FILES
+=====
+
+~/.redgit
+---------
+Configuration file in ini-format, do not use superfluous whitspace apart from
+empty lines. Do not use comments like in the example below:
+
+[redgit]
+http=foo.bar/redmine  # Redmine URL, allows omitting it in redlist redshow and redupload
+ssh=johndoe@foo.bar   # SSH access for redupdate
+[redlist]
+filter=Description    # Do not show Description column
+only=#                # If ANY only key is present, only those columns are shown
+only=Tracker
+only=Subject
+only=Status
