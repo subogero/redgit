@@ -4,13 +4,15 @@
 sub help {
     print <<EOF;
 Usage:
-redupload <server> <project> <file> [<description>]
 redupload -p <project> [<url>] <file>
+redupload -i <issue> [<url>] <file>
+redupload <server> <project> <file>
 Upload a file to Redmine.
 In the first form just specify a server name, '/redmine' will be appended.
 In the second form specify the entire url of the Redmine installation.
 <server>      URL of the server, assumes Redmine installed in /redmine
 -p <project>  Short project id
+-i <issue>    Issue id
 <url>         URL of Redmine root, taken from ~/.redgit if omitted
 <file>        Local path of the file to upload
 -h            Show this help text
@@ -20,41 +22,47 @@ EOF
 use WWW::Mechanize;
 use Term::ReadKey;
 
+our $url;
+if (open CFG, "$ENV{HOME}/.redgit") {
+    my $section = '';
+    while (<CFG>) {
+        $section = $1 if /^\[(.+)\]/;
+        next unless $section eq 'redgit';
+        s/\r|\n//g;
+        if (/^http=(.+)/) {
+            $url = $1;
+            last;
+        }
+    }
+    close CFG;
+}
+
 # Arguments
 help 0 if $ARGV[0] eq '-h';
-our $url;
-# Second form of args
+# 1st form of args
 if ($ARGV[0] eq '-p') {
     shift;
     $pj = shift;
-    help 1 unless $pj =~ /[-\w]{1,100}/;
-    if (@ARGV >= 2) {
-        $url = shift;
-    } else {
-        open CFG, "$ENV{HOME}/.redgit" or die $!;
-        my $section = '';
-        while (<CFG>) {
-            $section = $1 if /^\[(.+)\]/;
-            next unless $section eq 'redgit';
-            s/\r|\n//g;
-            if (/^http=(.+)/) {
-                $url = $1;
-                last;
-            }
-        }
-        close CFG;
-        help 1 unless $url;
-    }
-    $file = shift or help 1;
+    help 2 unless $pj =~ /[-\w]{1,100}/;
+    $url = shift if @ARGV >= 2;
+    $file = shift or help 3;
 }
-# First form of args
+# 2nd form of args
+elsif ($ARGV[0] eq '-i') {
+    shift;
+    $is = shift;
+    help 4 unless $is =~ /^\d+$/;
+    $url = shift if @ARGV >= 2;
+    $file = shift or help 5;
+}
+# 3rd form of args
 else {
-    our ($server, $pj, $file, $descr) = @ARGV;
-    help 1 unless $server && $pj && $file;
-    $descr = '' unless ($descr);
+    our ($server, $pj, $file) = @ARGV;
+    help 6 unless $server && $pj && $file;
     $url = "$server/redmine";
 }
-our $project = "projects/$pj";
+our $project = $pj && "projects/$pj";
+our $issue = $is && "issues/$is";
 $url =~ s|^|http://| unless $url =~ m|^\w+://|;
 
 # Authentication
@@ -73,10 +81,10 @@ $mech->submit_form(
     }
 );
 
-$mech->get("$url/$project/files/new");
-$mech->submit_form(
-    with_fields => {
-        "attachments[1][file]"        => $file,
-        "attachments[1][description]" => $descr
-    }
-);
+if ($project) {
+    $mech->get("$url/$project/files/new");
+    $mech->submit_form(with_fields => { "attachments[1][file]" => $file });
+} elsif ($issue) {
+    $mech->get("$url/$issue");
+    $mech->submit_form(with_fields => { "attachments[1][file]" => $file });
+}
