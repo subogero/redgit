@@ -70,21 +70,34 @@ print "$url username: "; (my $user = <STDIN>) =~ s/[\r\n]//g;
 ReadMode 'noecho';
 print "$url password: "; (my $password = <STDIN>) =~ s/[\r\n]//g;
 ReadMode 0;
+print "\n";
 
-my $mech = WWW::Mechanize->new();
+my $mech = WWW::Mechanize->new(cookie_jar => {});
+$mech->agent_alias("Linux Mozilla");
 
 $mech->get("$url/login");
-$mech->submit_form(
-    with_fields => {
+$mech->submit_form( with_fields => {
         username => $user,
         password => $password
     }
 );
+$mech->cookie_jar->save("$ENV{HOME}/.redcookie");
 
-if ($project) {
-    $mech->get("$url/$project/files/new");
-    $mech->submit_form(with_fields => { "attachments[1][file]" => $file });
-} elsif ($issue) {
-    $mech->get("$url/$issue");
-    $mech->submit_form(with_fields => { "attachments[1][file]" => $file });
+$page = $project ? "$url/$project/files/new"
+      : $issue   ? "$url/$issue"
+      :            "";
+help 7 unless $page;
+$mech->get($page);
+our $field;
+FORMS:
+foreach ($mech->forms) {
+    foreach ($_->inputs) {
+        $name = $_->name;
+        if ($name =~ /attachments.+file/) {
+            $field = $name;
+            last FORMS;
+        }
+    }
 }
+die "No file attachment form field available!" unless $field;
+$mech->submit_form(with_fields => { $field => $file });
