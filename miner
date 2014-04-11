@@ -1,14 +1,19 @@
 #!/bin/sh
 # Copyright: SZABO Gergely <szg@subogero.com>
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
-pj=$1
-while true; do
-  curl localhost/redmine/projects/${pj}/repository 2>/dev/null \
-  | sed -rn '/<select id="branch"/,/<select id="tag"/ p' \
-  | sed -rn 's/^<option value="([^"]+)".+/\1/p' \
-  | while read branch; do
-    curl localhost/redmine/projects/${pj}/repository/show?rev=$branch >/dev/null 2>&1
+daemon() {
+  pj=$1
+  while true; do
+    curl localhost/redmine/projects/${pj}/repository 2>/dev/null \
+    | sed -rn '/<select id="branch"/,/<select id="tag"/ p' \
+    | sed -rn 's/^<option value="([^"]+)".+/\1/p' \
+    | \
+    while read branch; do
+      curl localhost/redmine/projects/${pj}/repository/show?rev=$branch >/dev/null 2>&1
+      sleep 15
+    done
     sleep 15
   done
-  sleep 15
-done
+}
+
+daemon $1 &
