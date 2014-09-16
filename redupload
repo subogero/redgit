@@ -6,6 +6,7 @@ sub help {
 Usage:
 redupload -p <project> [<url>] <file>
 redupload -i <issue> [<url>] <file>
+redupload -v <version> [<url>] <file>
 redupload <server> <project> <file>
 Upload a file to Redmine.
 In the first form just specify a server name, '/redmine' will be appended.
@@ -13,6 +14,7 @@ In the second form specify the entire url of the Redmine installation.
 <server>      URL of the server, assumes Redmine installed in /redmine
 -p <project>  Short project id
 -i <issue>    Issue id
+-v <version   Version id
 <url>         URL of Redmine root, taken from ~/.redgit if omitted
 <file>        Local path of the file to upload
 -h            Show this help text
@@ -56,6 +58,14 @@ elsif ($ARGV[0] eq '-i') {
     $file = shift or help 5;
 }
 # 3rd form of args
+elsif ($ARGV[0] eq '-v') {
+    shift;
+    $ver = shift;
+    help 4 unless $ver =~ /^\d+$/;
+    $url = shift if @ARGV >= 2;
+    $file = shift or help 5;
+}
+# 4th form of args
 else {
     our ($server, $pj, $file) = @ARGV;
     help 6 unless $server && $pj && $file;
@@ -63,6 +73,7 @@ else {
 }
 our $project = $pj && "projects/$pj";
 our $issue = $is && "issues/$is";
+our $version = $ver && "versions/$ver";
 $url =~ s|^|http://| unless $url =~ m|^\w+://|;
 
 # Authentication
@@ -85,9 +96,22 @@ $mech->cookie_jar->save("$ENV{HOME}/.redcookie");
 
 $page = $project ? "$url/$project/files/new"
       : $issue   ? "$url/$issue"
+      : $version ? "$url/$version"
       :            "";
 help 7 unless $page;
 $mech->get($page);
+# -v version: First follow to the wiki edit page
+if ($version) {
+    foreach ($mech->links) {
+        my $link = $_->url;
+        next unless $link =~ m|projects/.+/wiki/.+/edit$|;
+        $link =~ s|^/redmine/||;
+        $page = "$url/$link";
+        $mech->get($page);
+        last;
+    }
+}
+# Find file upload form field and go
 our $field;
 FORMS:
 foreach ($mech->forms) {
