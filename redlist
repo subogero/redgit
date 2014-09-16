@@ -3,9 +3,10 @@
 # License  : WTFPL v2 <http://www.wtfpl.net/txt/copying/>
 sub help {
     print <<EOF;
-Usage: redlist [ -p <project> ] [<url>] | -h
+Usage: redlist [ -p <project> ] [-v] [<url>] | -h
 List issues from a Redmine server in plain text format.
 -p <project>  Filter for project id
+-v            List versions instead of issues
 <url>         URL of Redmine root, taken from ~/.redgit if omitted
 -h            Show this help text
 EOF
@@ -23,6 +24,12 @@ if ($ARGV[0] eq '-p') {
              : '';
 }
 
+if ($ARGV[0] eq '-v') {
+    shift;
+    $ver = 1;
+    die "Must specify project to get versions" unless $project;
+}
+
 unless (our $url = shift) {
     open CFG, "$ENV{HOME}/.redgit" or die $!;
     my $section = '';
@@ -38,8 +45,14 @@ unless (our $url = shift) {
     close CFG;
 }
 $url =~ s|/$||;
-$url .= "$project/issues.csv";
+$url .= "$project/";
+$url .= $ver ? 'roadmap' : 'issues.csv';
 $url =~ s|^|http://| unless $url =~ m|^\w+://|;
+
+if ($ver) {
+    versions();
+    exit 0;
+}
 
 our @issues;
 our $n_iss = 0;
@@ -111,6 +124,16 @@ foreach my $issue (@issues) {
         uprintf $format, $issue->{$fld};
     }
     print "\n";
+}
+
+sub versions {
+    print "Number  Name\n";
+    open CURL, "curl $url 2>/dev/null |" or die $!;
+    while (<CURL>) {
+        next unless m|class="version">.+<a href=".*/versions/(\d+)">(.+)</a|;
+        my ($num, $name) = ($1, $2);
+        printf "%6d  %s\n", $num, $name;
+    }
 }
 
 sub uprintf {
