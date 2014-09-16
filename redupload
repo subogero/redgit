@@ -102,6 +102,8 @@ help 7 unless $page;
 $mech->get($page);
 # -v version: First follow to the wiki edit page
 if ($version) {
+    my ($vername, $pjname) = split / - /, $mech->title;
+    undef $page;
     foreach ($mech->links) {
         my $link = $_->url;
         next unless $link =~ m|projects/.+/wiki/.+/edit$|;
@@ -110,6 +112,8 @@ if ($version) {
         $mech->get($page);
         last;
     }
+    die "Project $pjname version $vername has no Wiki page" unless $page;
+    print "Uploading to project $pjname version $vername\n";
 }
 # Find file upload form field and go
 our $field;
