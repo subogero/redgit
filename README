@@ -56,6 +56,20 @@ This will create the bare repo foo.git in the current dir, set up http access,
 and install gitemail into the post-receive hook to notify the maintainer
 about pushes.
 
+git-addsubtree
+--------------
+Add a subproject as a subtree merge from URL specified on command line.
+The subproject will be represented by a remote with the same name
+and checked out into a subdirectory with the same name as the subproject.
+
+git-pullsubtree
+---------------
+Pull changes from a branch of a subtree-merged subproject.
+
+make install copies both above scripts to /usr/lib/git-core, so they are
+available as git subcommands, like "git addsubtree <URL>" and
+"git pullsubtree <subpj> <branch>".
+
 FILES
 =====
 
